@@ -749,21 +749,28 @@ namespace MadWizard.WinUSBNet
                 {
                     wuDevice.OpenDevice(devicePath);
                     API.USB_DEVICE_DESCRIPTOR deviceDesc = wuDevice.GetDeviceDescriptor();
-                    // string q = wuDevice.GetStringDescriptor(0);
-                    // TODO: use language id properly
+
+                    // Patch from https://delog.wordpress.com/2013/06/19/winusbnet-patch-to-handle-language-id/
+                    string q = wuDevice.GetStringDescriptor(0, 0);
+                    if (q.Length == 0)
+                        throw new USBException("Failed to get USB string descriptor (0).");
+                    // TODO: Using the first language id. Need to improve API.
+                    ushort langID = q[0];
+
                     string manufacturer = null, product = null, serialNumber = null;
                     byte idx = 0;
                     idx = deviceDesc.iManufacturer;
                     if (idx > 0)
-                        manufacturer = wuDevice.GetStringDescriptor(idx);
+                        manufacturer = wuDevice.GetStringDescriptor(idx, langID);
 
                     idx = deviceDesc.iProduct;
                     if (idx > 0)
-                        product = wuDevice.GetStringDescriptor(idx);
+                        product = wuDevice.GetStringDescriptor(idx, langID);
 
-                    idx = deviceDesc.iSerialNumber;
+                    /*idx = deviceDesc.iSerialNumber;
                     if (idx > 0)
-                        serialNumber = wuDevice.GetStringDescriptor(idx);
+                        serialNumber = wuDevice.GetStringDescriptor(idx, langID);*/
+
                     descriptor = new USBDeviceDescriptor(devicePath, deviceDesc, manufacturer, product, serialNumber);
                 }
                 return descriptor;
